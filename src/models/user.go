@@ -8,15 +8,19 @@ import (
 	"gorm.io/gorm"
 )
 
-type UserWrite struct {
-	gorm.Model
+type User struct {
 	FirstName        string `json:"first_name"`
 	LastName         string `json:"last_name"`
 	Email            string `json:"email" gorm:"unique"`
 	Password         []byte `json:"-"`
+	IsAmbassador     bool   `json:"is_ambassador"`
 	PasswordValidate string `json:"-" gorm:"-"`
 	PasswordConfirm  string `json:"-" gorm:"-"`
-	IsAmbassador     bool   `json:"is_ambassador"`
+}
+
+type UserWrite struct {
+	gorm.Model
+	User
 }
 
 func (UserWrite) TableName() string {
@@ -24,29 +28,25 @@ func (UserWrite) TableName() string {
 }
 
 type UserRead struct {
-	ID           int            `json:"id"`
-	FirstName    string         `json:"first_name"`
-	LastName     string         `json:"last_name"`
-	Email        string         `json:"email"`
-	Password     []byte         `json:"-"`
-	IsAmbassador bool           `json:"is_ambassador"`
-	CreatedAt    time.Time      `json:"-"`
-	UpdatedAt    time.Time      `json:"-"`
-	DeletedAt    gorm.DeletedAt `json:"-"`
+	ID int `json:"id"`
+	User
+	CreatedAt time.Time      `json:"-"`
+	UpdatedAt time.Time      `json:"-"`
+	DeletedAt gorm.DeletedAt `json:"-"`
 }
 
 func (UserRead) TableName() string {
 	return "users"
 }
 
-func (u *UserWrite) Validate() error {
+func (u *User) Validate() error {
 	if u.PasswordValidate != u.PasswordConfirm {
 		return errors.New("passwords don't match")
 	}
 	return nil
 }
 
-func (u *UserWrite) SetPassword(password string) error {
+func (u *User) SetPassword(password string) error {
 	hashed, err := bcrypt.GenerateFromPassword([]byte(password), 12)
 	if err != nil {
 		return err
@@ -55,6 +55,6 @@ func (u *UserWrite) SetPassword(password string) error {
 	return nil
 }
 
-func (u *UserRead) ComparePassword(password string) error {
+func (u *User) ComparePassword(password string) error {
 	return bcrypt.CompareHashAndPassword(u.Password, []byte(password))
 }
