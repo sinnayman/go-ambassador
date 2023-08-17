@@ -14,10 +14,12 @@ func Setup(app *fiber.App, db *database.Database) {
 	admin := api.Group("/admin")
 
 	userController := controllers.NewUserController(db)
-	admin.Post("/register", userController.Register)
+	admin.Post("/", userController.Register)
 	admin.Get("/login", userController.Login)
 
 	adminAuthenticated := admin.Use(middleware.IsAuthenticated)
-	adminAuthenticated.Get("/User", userController.GetAuthenticatedUser)
+	adminAuthenticated.Get("/", userController.GetAuthenticatedUser)
 	adminAuthenticated.Get("/logout", userController.Logout)
+	adminAuthenticated.Put("/", userController.UpdateUser)
+	adminAuthenticated.Put("/password", userController.UpdatePassword)
 }
