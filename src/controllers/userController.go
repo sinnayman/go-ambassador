@@ -3,12 +3,12 @@ package controllers
 import (
 	"ambassador/src/database"
 	"ambassador/src/models"
+	"ambassador/src/utils"
 	"strconv"
 	"time"
 
 	"github.com/dgrijalva/jwt-go/v4"
 	"github.com/gofiber/fiber/v2"
-	"golang.org/x/crypto/bcrypt"
 )
 
 type UserController struct {
@@ -27,17 +27,13 @@ func (c *UserController) Register(ctx *fiber.Ctx) error {
 	}
 
 	if data["password"] != data["password_confirm"] {
-		ctx.Status(400)
-		return ctx.JSON(fiber.Map{"message": "passwords don't match"})
+		return utils.SendErrorResponse(ctx, "passwords don't match", fiber.StatusBadRequest)
 	}
-
-	password, _ := bcrypt.GenerateFromPassword([]byte(data["password"]), 12)
 
 	user := models.User{
 		FirstName:        data["first_name"],
 		LastName:         data["last_name"],
 		Email:            data["email"],
-		Password:         password,
 		PasswordValidate: data["password"],
 		PasswordConfirm:  data["password_confirm"],
 		IsAmbassador:     false,
@@ -45,8 +41,11 @@ func (c *UserController) Register(ctx *fiber.Ctx) error {
 
 	// Validate the user
 	if err := user.Validate(); err != nil {
-		ctx.Status(400)
-		return ctx.JSON(fiber.Map{"message": err.Error()})
+		return utils.SendErrorResponse(ctx, err.Error(), fiber.StatusBadRequest)
+	}
+
+	if err := user.SetPassword(data["password"]); err != nil {
+		return utils.SendErrorResponse(ctx, err.Error(), fiber.StatusBadRequest)
 	}
 
 	c.db.Create(&user)
@@ -65,16 +64,11 @@ func (c *UserController) Login(ctx *fiber.Ctx) error {
 	result := c.db.DB.Where("email = ?", data["email"]).First(&user)
 
 	if result.Error != nil {
-		ctx.Status(fiber.StatusBadRequest)
-		return ctx.JSON(fiber.Map{
-			"message": "Invalid Credentials",
-		})
+		return utils.SendErrorResponse(ctx, "Invalid Credentials", fiber.StatusBadRequest)
 	}
 
-	if err := bcrypt.CompareHashAndPassword(user.Password, []byte(data["password"])); err != nil {
-		return ctx.JSON(fiber.Map{
-			"message": "Invalid Credentials",
-		})
+	if err := user.ComparePassword(data["password"]); err != nil {
+		return utils.SendErrorResponse(ctx, "Invalid Credentials", fiber.StatusBadRequest)
 	}
 
 	expires := time.Now().Add(time.Hour * 24)
@@ -86,9 +80,7 @@ func (c *UserController) Login(ctx *fiber.Ctx) error {
 	token, err := jwt.NewWithClaims(jwt.SigningMethodHS256, payload).SignedString([]byte("secret"))
 
 	if err != nil {
-		return ctx.JSON(fiber.Map{
-			"message": "Invalid Credentials",
-		})
+		return utils.SendErrorResponse(ctx, "Invalid Credentials", fiber.StatusBadRequest)
 	}
 
 	cookie := fiber.Cookie{

@@ -3,6 +3,7 @@ package models
 import (
 	"errors"
 
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
@@ -22,4 +23,17 @@ func (u *User) Validate() error {
 		return errors.New("passwords don't match")
 	}
 	return nil
+}
+
+func (u *User) SetPassword(password string) error {
+	hashed, err := bcrypt.GenerateFromPassword([]byte(password), 12)
+	if err != nil {
+		return err
+	}
+	u.Password = hashed
+	return nil
+}
+
+func (u *User) ComparePassword(password string) error {
+	return bcrypt.CompareHashAndPassword(u.Password, []byte(password))
 }
