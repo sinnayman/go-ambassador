@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"ambassador/src/database"
+	"ambassador/src/middleware"
 	"ambassador/src/models"
 	"ambassador/src/utils"
 	"strconv"
@@ -31,12 +32,14 @@ func (c *UserController) Register(ctx *fiber.Ctx) error {
 	}
 
 	user := models.UserWrite{
-		FirstName:        data["first_name"],
-		LastName:         data["last_name"],
-		Email:            data["email"],
-		PasswordValidate: data["password"],
-		PasswordConfirm:  data["password_confirm"],
-		IsAmbassador:     false,
+		User: models.User{
+			FirstName:        data["first_name"],
+			LastName:         data["last_name"],
+			Email:            data["email"],
+			PasswordValidate: data["password"],
+			PasswordConfirm:  data["password_confirm"],
+			IsAmbassador:     false,
+		},
 	}
 
 	// Validate the user
@@ -97,9 +100,9 @@ func (c *UserController) Login(ctx *fiber.Ctx) error {
 
 func (c *UserController) GetAuthenticatedUser(ctx *fiber.Ctx) error {
 
-	userId, ok := ctx.Locals("User_ID").(string) // Corrected line
-	if !ok {
-		return utils.SendErrorResponse(ctx, "User ID not found in context", fiber.StatusInternalServerError)
+	userId := middleware.GetUserID(ctx)
+	if userId == 0 {
+		return utils.SendErrorResponse(ctx, "User not found", fiber.StatusUnauthorized)
 	}
 
 	var user models.UserRead
@@ -121,4 +124,59 @@ func (c *UserController) Logout(ctx *fiber.Ctx) error {
 
 	ctx.Cookie(&cookie)
 	return nil
+}
+
+func (c *UserController) UpdateUser(ctx *fiber.Ctx) error {
+	userId := middleware.GetUserID(ctx)
+	if userId == 0 {
+		return utils.SendErrorResponse(ctx, "User not found", fiber.StatusUnauthorized)
+	}
+
+	var data map[string]string
+
+	if err := ctx.BodyParser(&data); err != nil {
+		return err
+	}
+
+	user := models.UserRead{
+		ID: int(userId),
+		User: models.User{
+			FirstName: data["first_name"],
+			LastName:  data["last_name"],
+			Email:     data["email"],
+		},
+	}
+
+	c.db.DB.Model(&user).Updates(&user)
+
+	return ctx.JSON(user)
+}
+
+func (c *UserController) UpdatePassword(ctx *fiber.Ctx) error {
+	userId := middleware.GetUserID(ctx)
+	if userId == 0 {
+		return utils.SendErrorResponse(ctx, "User not found", fiber.StatusUnauthorized)
+	}
+
+	var data map[string]string
+
+	if err := ctx.BodyParser(&data); err != nil {
+		return err
+	}
+
+	if data["password"] != data["password_confirm"] {
+		return utils.SendErrorResponse(ctx, "passwords don't match", fiber.StatusBadRequest)
+	}
+
+	user := models.UserRead{
+		ID: int(userId),
+	}
+
+	if err := user.SetPassword(data["password"]); err != nil {
+		return utils.SendErrorResponse(ctx, err.Error(), fiber.StatusBadRequest)
+	}
+
+	c.db.DB.Model(&user).Updates(&user)
+
+	return ctx.JSON(user)
 }
