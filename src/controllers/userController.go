@@ -95,21 +95,15 @@ func (c *UserController) Login(ctx *fiber.Ctx) error {
 	return nil
 }
 
-func (c *UserController) Authenticate(ctx *fiber.Ctx) error {
-	cookie := ctx.Cookies("jwt")
+func (c *UserController) GetAuthenticatedUser(ctx *fiber.Ctx) error {
 
-	token, err := jwt.ParseWithClaims(cookie, &jwt.StandardClaims{}, func(t *jwt.Token) (interface{}, error) {
-		return []byte("secret"), nil
-	})
-
-	if err != nil || !token.Valid {
-		return utils.SendErrorResponse(ctx, "Invalid Authentication", fiber.StatusForbidden)
+	userId, ok := ctx.Locals("User_ID").(string) // Corrected line
+	if !ok {
+		return utils.SendErrorResponse(ctx, "User ID not found in context", fiber.StatusInternalServerError)
 	}
 
-	payload := token.Claims.(*jwt.StandardClaims)
-
 	var user models.UserRead
-	result := c.db.DB.Where("id = ?", payload.Subject).First(&user)
+	result := c.db.DB.Where("id = ?", userId).First(&user)
 	if result.Error != nil {
 		return utils.SendErrorResponse(ctx, result.Error.Error(), fiber.StatusBadRequest)
 	}
