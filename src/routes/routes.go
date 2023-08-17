@@ -14,6 +14,7 @@ func Setup(app *fiber.App, db *database.Database) {
 	admin := api.Group("/admin")
 
 	userController := controllers.NewUserController(db)
+	ambassadorController := controllers.NewAmbassadorController(db)
 	admin.Post("/", userController.Register)
 	admin.Get("/login", userController.Login)
 
@@ -22,4 +23,6 @@ func Setup(app *fiber.App, db *database.Database) {
 	adminAuthenticated.Get("/logout", userController.Logout)
 	adminAuthenticated.Put("/", userController.UpdateUser)
 	adminAuthenticated.Put("/password", userController.UpdatePassword)
+
+	adminAuthenticated.Get("/ambassadors", ambassadorController.GetAll)
 }
