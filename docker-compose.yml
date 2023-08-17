@@ -12,6 +12,13 @@
         - ambassador
       depends_on:
         - db
+    seed:
+      build: .
+      command: go run src/commands/dbseed.go
+      depends_on:
+        - db
+      networks:
+        - ambassador
     db:
       image: mysql:8.1.0
       restart: always
