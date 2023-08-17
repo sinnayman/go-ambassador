@@ -15,4 +15,6 @@ func Setup(app *fiber.App, db *database.Database) {
 	userController := controllers.NewUserController(db)
 	admin.Post("/register", userController.Register)
 	admin.Get("/login", userController.Login)
+	admin.Get("/authenticate", userController.Authenticate)
+	admin.Get("/logout", userController.Logout)
 }

@@ -30,7 +30,7 @@ func (c *UserController) Register(ctx *fiber.Ctx) error {
 		return utils.SendErrorResponse(ctx, "passwords don't match", fiber.StatusBadRequest)
 	}
 
-	user := models.User{
+	user := models.UserWrite{
 		FirstName:        data["first_name"],
 		LastName:         data["last_name"],
 		Email:            data["email"],
@@ -60,7 +60,7 @@ func (c *UserController) Login(ctx *fiber.Ctx) error {
 		return err
 	}
 
-	var user models.User
+	var user models.UserRead
 	result := c.db.DB.Where("email = ?", data["email"]).First(&user)
 
 	if result.Error != nil {
@@ -92,5 +92,39 @@ func (c *UserController) Login(ctx *fiber.Ctx) error {
 
 	ctx.Cookie(&cookie)
 
+	return nil
+}
+
+func (c *UserController) Authenticate(ctx *fiber.Ctx) error {
+	cookie := ctx.Cookies("jwt")
+
+	token, err := jwt.ParseWithClaims(cookie, &jwt.StandardClaims{}, func(t *jwt.Token) (interface{}, error) {
+		return []byte("secret"), nil
+	})
+
+	if err != nil || !token.Valid {
+		return utils.SendErrorResponse(ctx, "Invalid Authentication", fiber.StatusForbidden)
+	}
+
+	payload := token.Claims.(*jwt.StandardClaims)
+
+	var user models.UserRead
+	result := c.db.DB.Where("id = ?", payload.Subject).First(&user)
+	if result.Error != nil {
+		return utils.SendErrorResponse(ctx, result.Error.Error(), fiber.StatusBadRequest)
+	}
+
+	return ctx.JSON(user)
+}
+
+func (c *UserController) Logout(ctx *fiber.Ctx) error {
+	cookie := fiber.Cookie{
+		Name:     "jwt",
+		Value:    "",
+		Expires:  time.Now().Add(-time.Hour),
+		HTTPOnly: true,
+	}
+
+	ctx.Cookie(&cookie)
 	return nil
 }
