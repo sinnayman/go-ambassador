@@ -37,5 +37,5 @@ func (d *Database) Close() {
 }
 
 func (d *Database) AutoMigrate() {
-	d.DB.AutoMigrate(models.UserWrite{})
+	d.DB.AutoMigrate(models.UserWrite{},  models.ProductWrite{})
 }
