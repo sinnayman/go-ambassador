@@ -1,24 +1,20 @@
 package models
 
 type Product struct {
-	 Title string `json:"id"`
-	 Description string `json:"description"`
-	 Image string `json:"image"`
-	 Price string `json:"price"`
+	Description string `json:"description"`
+	Image       string `json:"image"`
+	Price       string `json:"price"`
 }
 
 type ProductWrite struct {
-	gorm.Model
+	ModelWrite
 	Product
 }
 
 // hides the gorm details from the API
 type ProductRead struct {
-	ID int `json:"id"`
+	ModelRead
 	Product
-	CreatedAt time.Time      `json:"-"`
-	UpdatedAt time.Time      `json:"-"`
-	DeletedAt gorm.DeletedAt `json:"-"`
 }
 
 // place holder

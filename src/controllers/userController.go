@@ -139,7 +139,9 @@ func (c *UserController) UpdateUser(ctx *fiber.Ctx) error {
 	}
 
 	user := models.UserRead{
-		ID: int(userId),
+		ModelRead: models.ModelRead{
+			ID: int(userId),
+		},
 		User: models.User{
 			FirstName: data["first_name"],
 			LastName:  data["last_name"],
@@ -169,7 +171,9 @@ func (c *UserController) UpdatePassword(ctx *fiber.Ctx) error {
 	}
 
 	user := models.UserRead{
-		ID: int(userId),
+		ModelRead: models.ModelRead{
+			ID: int(userId),
+		},
 	}
 
 	if err := user.SetPassword(data["password"]); err != nil {

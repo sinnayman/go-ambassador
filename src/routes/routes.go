@@ -15,6 +15,7 @@ func Setup(app *fiber.App, db *database.Database) {
 
 	userController := controllers.NewUserController(db)
 	ambassadorController := controllers.NewAmbassadorController(db)
+	productsController := controllers.NewProductController(db)
 	admin.Post("/", userController.Register)
 	admin.Get("/login", userController.Login)
 

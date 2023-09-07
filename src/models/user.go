@@ -28,7 +28,7 @@ func (UserWrite) TableName() string {
 }
 
 type UserRead struct {
-	ID int `json:"id"`
+	ModelRead
 	User
 	CreatedAt time.Time      `json:"-"`
 	UpdatedAt time.Time      `json:"-"`
