@@ -1,9 +1,14 @@
 package models
 
+func (ProductWrite) TableName() string {
+	return "products"
+}
+
 type Product struct {
-	Description string `json:"description"`
-	Image       string `json:"image"`
-	Price       string `json:"price"`
+	Title       string  `json:"title"`
+	Description string  `json:"description"`
+	Image       string  `json:"image"`
+	Price       float64 `json:"price"`
 }
 
 type ProductWrite struct {

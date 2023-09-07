@@ -40,11 +40,16 @@ func (p *ProductController) CreateProduct(ctx *fiber.Ctx) error {
 		return err
 	}
 
+	price, err := strconv.ParseFloat(data["price"], 64)
+	if err != nil {
+		return err
+	}
+
 	product := models.ProductWrite{
 		Product: models.Product{
 			Description: data["description"],
 			Image:       data["image"],
-			Price:       data["price"],
+			Price:       price,
 		},
 	}
 
@@ -84,6 +89,11 @@ func (p *ProductController) UpdateById(ctx *fiber.Ctx) error {
 		})
 	}
 
+	price, err := strconv.ParseFloat(data["price"], 64)
+	if err != nil {
+		return err
+	}
+
 	product := models.ProductRead{
 		ModelRead: models.ModelRead{
 			ID: int(productID),
@@ -91,7 +101,7 @@ func (p *ProductController) UpdateById(ctx *fiber.Ctx) error {
 		Product: models.Product{
 			Description: data["description"],
 			Image:       data["image"],
-			Price:       data["price"],
+			Price:       price,
 		},
 	}
 
