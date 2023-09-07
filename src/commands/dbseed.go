@@ -35,7 +35,7 @@ func main() {
 			return
 		}
 
-		for i := 0; i < 1; i++ {
+		for i := 0; i < 20; i++ {
 			ambassador := models.UserWrite{
 				User: models.User{
 					FirstName:    faker.FirstName(),
@@ -50,7 +50,7 @@ func main() {
 	}
 
 	if *seedProducts {
-		for i := 0; i < 1; i++ {
+		for i := 0; i < 20; i++ {
 			product := models.ProductWrite{
 				Product: models.Product{
 					Title:       gofakeit.BuzzWord(),         // Generates a random buzzword as the product title
