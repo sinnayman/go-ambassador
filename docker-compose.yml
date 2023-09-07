@@ -4,8 +4,8 @@
       build:
         context: .
       ports:
-        - 9000:3000 # map internal port 3000 to external 8000
-        - 40000:40000 # map internal port 3000 to external 8000
+        - 9000:3000 # map internal port 3000 to external 9000
+        - 40000:40000 # map internal port 40000 to external 40000
       volumes:
         - .:/app:rw,delegated
       networks:
@@ -14,7 +14,7 @@
         - db
     seed:
       build: .
-      command: go run src/commands/dbseed.go
+      command: sh -c "sleep 10 && dockerize -wait tcp://db:3306 -timeout 60s go run src/commands/dbseed.go"
       depends_on:
         - db
       networks:
